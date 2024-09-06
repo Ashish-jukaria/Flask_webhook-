@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repo Updates</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        #events {
+            width: 80%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        /* Event Card */
+        .event-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .event-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #007bff;
+        }
+
+        .event-body {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .event-timestamp {
+            font-size: 12px;
+            color: #888;
+            text-align: right;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            #events {
+                width: 95%;
+            }
+
+            .event-card {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Latest Repository Changes</h1>
+    <div id="events"></div>
+
+    <script>
+        // Function to pull data from the API every 15 seconds
+        function fetchEvents() {
+            fetch('/webhook/latest')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Fetched data:', data); // Log the fetched data for debugging
+
+                    const eventsDiv = document.getElementById('events');
+                    eventsDiv.innerHTML = '';  // Clear existing data
+
+                    data.forEach(event => {
+                        let message = '';
+                        if (event.event_type === 'push') {
+                            message = `${event.author || 'Unknown author'} pushed to ${event.to_branch || 'Unknown branch'}`;
+                        }  
+                        if (event.event_type === 'pull') {
+                            message = `${event.user_name || 'Unknown user'} submitted a pull request from ${event.from_branch || 'Unknown branch'} to ${event.to_branch || 'Unknown branch'}`;
+                        }  
+                        if (event.event_type === 'merge') {
+                            message = `${event.user_name || 'Unknown author'} merged branch ${event.from_branch || 'Unknown branch'} to ${event.to_branch || 'Unknown branch'}`;
+                        }
+
+                        const eventCard = document.createElement('div');
+                        eventCard.classList.add('event-card');
+
+                        const eventHeader = document.createElement('div');
+                        eventHeader.classList.add('event-header');
+                        eventHeader.textContent = event.event_type.toUpperCase();
+
+                        const eventBody = document.createElement('div');
+                        eventBody.classList.add('event-body');
+                        eventBody.textContent = message;
+
+                        const eventTimestamp = document.createElement('div');
+                        eventTimestamp.classList.add('event-timestamp');
+                        eventTimestamp.textContent = new Date(event.timestamp).toLocaleString();
+
+                        eventCard.appendChild(eventHeader);
+                        eventCard.appendChild(eventBody);
+                        eventCard.appendChild(eventTimestamp);
+                        eventsDiv.appendChild(eventCard);
+                    });
+                })
+                .catch(error => console.error('Error fetching events:', error));
+        }
+
+        // Fetch data every 15 seconds
+        setInterval(fetchEvents, 15000);
+        fetchEvents();  // Initial fetch
+    </script>
+</body>
+</html>
